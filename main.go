@@ -6,10 +6,10 @@ import (
 )
 
 type product struct {
-	name         string `json:"name"`
-	manufacturer string `json:"manufacturer"`
-	price        int    `json:"price"`
-	available    bool   `json:"available"`
+	Name         string `json:"name"`
+	Manufacturer string `json:"manufacturer"`
+	Price        int    `json:"price"`
+	Available    bool   `json:"available"`
 }
 type productsHandlers struct {
 	store map[string]product
@@ -34,10 +34,10 @@ func newProductsHandler() *productsHandlers {
 	return &productsHandlers{
 		store: map[string]product{
 			"ID1": {
-				name:         "product1",
-				manufacturer: "manufacturer1",
-				price:        14,
-				available:    true,
+				Name:         "product1",
+				Manufacturer: "manufacturer1",
+				Price:        14,
+				Available:    true,
 			},
 		},
 	}
