@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type Product struct {
+	Id           string `json:"id"`
 	Name         string `json:"name"`
 	Manufacturer string `json:"manufacturer"`
 	Price        int    `json:"price"`
@@ -48,6 +51,7 @@ func (h *productsHandlers) post(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 	}
 
+	product.Id = fmt.Sprintf("%d", time.Now().UnixNano())
 	h.Lock()
 	h.store[product.Name] = product
 	defer h.Unlock()
