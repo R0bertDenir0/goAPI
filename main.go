@@ -2,17 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"sync"
 )
 
-type product struct {
+type Product struct {
 	Name         string `json:"name"`
 	Manufacturer string `json:"manufacturer"`
 	Price        int    `json:"price"`
 	Available    bool   `json:"available"`
 }
 type productsHandlers struct {
-	store map[string]product
+	sync.Mutex
+	store map[string]Product
 }
 
 func (h *productsHandlers) products(w http.ResponseWriter, r *http.Request) {
@@ -31,16 +34,36 @@ func (h *productsHandlers) products(w http.ResponseWriter, r *http.Request) {
 
 }
 func (h *productsHandlers) post(w http.ResponseWriter, r *http.Request) {
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+	}
+
+	var product Product
+	err = json.Unmarshal(bodyBytes, &product)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+	}
+
+	h.Lock()
+	h.store[product.Name] = product
+	defer h.Unlock()
 
 }
 func (h *productsHandlers) get(w http.ResponseWriter, r *http.Request) {
-	products := make([]product, len(h.store))
+	products := make([]Product, len(h.store))
+	h.Lock()
 
 	i := 0
 	for _, product := range h.store {
 		products[i] = product
 		i++
 	}
+	h.Unlock()
+
 	jsonBytes, err := json.Marshal(products)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -53,7 +76,7 @@ func (h *productsHandlers) get(w http.ResponseWriter, r *http.Request) {
 }
 func newProductsHandler() *productsHandlers {
 	return &productsHandlers{
-		store: map[string]product{
+		store: map[string]Product{
 			"ID1": {
 				Name:         "product1",
 				Manufacturer: "manufacturer1",
